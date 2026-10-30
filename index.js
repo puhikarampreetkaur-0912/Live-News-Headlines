@@ -29,7 +29,7 @@ function selectCategory(event, category) {
 
 function getNews(category) {
 
-    fetch(`https://gnews.io/api/v4/top-headlines?country=in&category=${category}&lang=${currentLang}&apikey=${apikey}`)
+    fetch(`/api/news?category=${category}&lang=${currentLang}`)
         .then(res => res.json())
         .then(data => {
 
