@@ -12,11 +12,14 @@ module.exports = async(req, res) => {
         const lang = req.query.lang || "en";
 
         const params = new URLSearchParams({
-            country: "in",
-            category: category,
-            lang: lang,
-            token: apiKey
-        });
+    category: category,
+    lang: lang,
+    token: apiKey
+});
+
+if (lang !== "pa" && lang !== "es") {
+    params.set("country", "in");
+}
 
         const url = `https://gnews.io/api/v4/top-headlines?${params}`;
 
