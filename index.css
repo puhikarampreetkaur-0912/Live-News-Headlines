@@ -1,0 +1,176 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background: url("https://images.unsplash.com/photo-1504711434969-e33886168f5c") repeat-y;
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    font-family: sans-serif;
+    transition: 0.3s;
+}
+
+
+/* 🔥 FIXED HEADER */
+
+h1 {
+    position: relative;
+    font-size: 22px;
+    text-align: center;
+    background-color: rgb(48, 129, 156);
+    padding: 8px 20px;
+    color: white;
+    margin-bottom: 10px;
+}
+
+
+/* 🔥 RIGHT SIDE CONTROLS */
+
+.top-controls {
+    position: absolute;
+    right: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    align-items: center;
+}
+
+
+/* 🔥 SMALL BUTTON */
+
+.toggle-btn {
+    padding: 5px 10px;
+    border: none;
+    border-radius: 20px;
+    cursor: pointer;
+    background: black;
+    color: white;
+    margin-left: 5px;
+    font-size: 14px;
+}
+
+
+/* 🔥 SMALL DROPDOWN */
+
+select {
+    padding: 4px 8px;
+    border-radius: 10px;
+    margin-left: 5px;
+    font-size: 14px;
+}
+
+.category-wrapper {
+    overflow: hidden;
+    padding: 40px 0;
+}
+
+.category-container {
+    display: flex;
+    gap: 20px;
+    overflow-x: auto;
+    scroll-behavior: smooth;
+    padding: 20px;
+}
+
+.category-container::-webkit-scrollbar {
+    display: none;
+}
+
+.cat-card {
+    min-width: 260px;
+    height: 300px;
+    background: #111;
+    border-radius: 20px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: 0.5s;
+    position: relative;
+    filter: blur(2px);
+    transform: scale(0.8);
+    opacity: 0.6;
+    color: white;
+}
+
+.cat-card img {
+    width: 100%;
+    height: 70%;
+    object-fit: cover;
+}
+
+.cat-card h3 {
+    text-align: center;
+    margin-top: 10px;
+}
+
+.cat-card.active {
+    transform: scale(1.1);
+    filter: blur(0);
+    opacity: 1;
+    z-index: 2;
+}
+
+.cat-card:hover {
+    transform: scale(1.05);
+    filter: blur(0);
+    opacity: 1;
+}
+
+
+/* LIGHT MODE */
+
+.light-mode {
+    background: white !important;
+    color: black;
+}
+
+.light-mode .cat-card {
+    background: #f0f0f0;
+    color: black;
+}
+
+.light-mode h3 {
+    color: black;
+}
+
+#news-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    padding: 20px;
+}
+
+.news-card {
+    width: 260px;
+    margin: 10px;
+    background: #111;
+    border-radius: 10px;
+    overflow: hidden;
+    color: white;
+}
+
+.news-card img {
+    width: 100%;
+    height: 160px;
+    object-fit: cover;
+}
+
+.news-card h4 {
+    padding: 10px;
+}
+
+.news-card a {
+    display: block;
+    background: red;
+    color: white;
+    text-align: center;
+    padding: 8px;
+    text-decoration: none;
+}
+
+.light-mode .news-card {
+    background: #eaeaea;
+    color: black;
+}

@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>News App</title>
+    <link rel="stylesheet" href="index.css">
+</head>
+
+<body>
+
+    <h1>
+        📰 Live News Headlines
+        <div class="top-controls">
+            <button class="toggle-btn" onclick="toggleTheme()">🌗</button>
+
+            <select id="language" onchange="changeLanguage()">
+                <option value="en">English</option>
+                <option value="hi">Hindi</option>
+                <option value="pa">Punjabi</option>
+                <option value="es">Spanish</option>
+                <option value="fr">French</option>
+                <option value="gu">Gujarati</option>
+            </select>
+        </div>
+    </h1>
+
+    <div class="category-wrapper">
+        <div class="category-container" id="categories">
+
+            <div class="cat-card active" onclick="selectCategory(event,'general')">
+                <img src="https://cdn-icons-png.flaticon.com/512/4588/4588164.png">
+                <h3>General</h3>
+            </div>
+
+            <div class="cat-card" onclick="selectCategory(event,'technology')">
+                <img
+                    src="https://img.freepik.com/free-photo/news-newspaper-news-feed-report-information-concept_53876-167055.jpg">
+                <h3>Technology</h3>
+            </div>
+
+            <div class="cat-card" onclick="selectCategory(event,'sports')">
+                <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTrKDo5MlQNoU5SmhvqA-4koTdyOYeCGzo4fw&s">
+                <h3>Sports</h3>
+            </div>
+
+            <div class="cat-card" onclick="selectCategory(event,'business')">
+                <img src="https://as2.ftcdn.net/jpg/02/25/64/39/1000_F_225643925_EIEgjNmv3DHQKTQZ6lqnk8TEcq2t9agD.jpg">
+                <h3>Business</h3>
+            </div>
+
+            <div class="cat-card" onclick="selectCategory(event,'health')">
+                <img src="https://i0.wp.com/www.ghealthnews.com/wp-content/uploads/2025/05/GHealth-News-Logo.png">
+                <h3>Health</h3>
+            </div>
+
+        </div>
+    </div>
+
+    <div id="news-container"></div>
+
+    <script src="index.js"></script>
+</body>
+
+</html>
