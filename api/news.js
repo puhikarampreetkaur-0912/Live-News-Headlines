@@ -33,7 +33,7 @@ module.exports = async (req, res) => {
             return res.status(response.status).json(data);
         }
 
-        // Punjabi Technology and Health fallback
+        // Punjabi Technology and Health search fallback
         if (
             lang === "pa" &&
             ["technology", "health"].includes(category) &&
@@ -61,7 +61,43 @@ module.exports = async (req, res) => {
                 return res.status(searchResponse.status).json(searchData);
             }
 
-            return res.status(200).json(searchData);
+            // If Punjabi search has news, show it
+            if (searchData.articles && searchData.articles.length > 0) {
+                return res.status(200).json(searchData);
+            }
+        }
+
+        // General news fallback for only the affected categories
+        const needsGeneralFallback =
+            (lang === "pa" &&
+                ["technology", "health"].includes(category)) ||
+            (lang === "gu" && category === "technology");
+
+        if (
+            needsGeneralFallback &&
+            (!data.articles || data.articles.length === 0)
+        ) {
+            const generalParams = new URLSearchParams({
+                category: "general",
+                lang: lang,
+                apikey: apiKey
+            });
+
+            if (lang !== "pa" && lang !== "es") {
+                generalParams.set("country", "in");
+            }
+
+            const generalResponse = await fetch(
+                `https://gnews.io/api/v4/top-headlines?${generalParams}`
+            );
+
+            const generalData = await generalResponse.json();
+
+            if (!generalResponse.ok) {
+                return res.status(generalResponse.status).json(generalData);
+            }
+
+            return res.status(200).json(generalData);
         }
 
         return res.status(200).json(data);
