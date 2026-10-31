@@ -4,82 +4,95 @@ module.exports = async (req, res) => {
         const apiKey = process.env.GNEWS_API_KEY;
 
         if (!apiKey) {
-            return res.status(500).json({ error: "API key missing" });
+            return res.status(500).json({
+                error: "GNews API key is missing"
+            });
         }
 
         const category = req.query.category || "general";
         const lang = req.query.lang || "en";
 
-        const fetchNews = async (cat, searchQuery = null) => {
+        const needsFallback =
+            (lang === "pa" && ["technology", "health"].includes(category)) ||
+            (lang === "gu" && category === "technology");
+
+        const fetchNews = async (selectedCategory, query = null) => {
             const params = new URLSearchParams({
                 lang: lang,
                 max: "10",
                 apikey: apiKey
             });
 
-            if (searchQuery) {
-                params.set("q", searchQuery);
+            if (query) {
+                params.set("q", query);
             } else {
-                params.set("category", cat);
+                params.set("category", selectedCategory);
             }
 
             if (lang !== "pa" && lang !== "es") {
                 params.set("country", "in");
             }
 
-            const endpoint = searchQuery ? "search" : "top-headlines";
+            const endpoint = query ? "search" : "top-headlines";
 
             const response = await fetch(
                 `https://gnews.io/api/v4/${endpoint}?${params}`
             );
 
-            const result = await response.json();
+            const data = await response.json();
 
-            if (!response.ok) {
-                throw {
-                    status: response.status,
-                    data: result
-                };
-            }
-
-            return result;
+            return {
+                ok: response.ok,
+                data: data
+            };
         };
 
-        // First try selected category
-        let data = await fetchNews(category);
+        // 1. Selected category news
+        let result = await fetchNews(category);
 
-        // Punjabi Technology / Health search fallback
+        // 2. Punjabi search fallback
         if (
             lang === "pa" &&
             ["technology", "health"].includes(category) &&
-            (!data.articles || data.articles.length === 0)
+            (!result.ok || !result.data.articles?.length)
         ) {
             const query = category === "technology"
                 ? "ਤਕਨਾਲੋਜੀ OR ਤਕਨੀਕ OR ਕੰਪਿਊਟਰ OR ਮੋਬਾਈਲ"
                 : "ਸਿਹਤ OR ਬਿਮਾਰੀ OR ਹਸਪਤਾਲ OR ਦਵਾਈ";
 
-            data = await fetchNews(category, query);
+            const searchResult = await fetchNews(category, query);
+
+            if (searchResult.ok && searchResult.data.articles?.length) {
+                result = searchResult;
+            }
         }
 
-        // If still empty, use General news for affected languages only
+        // 3. General news fallback
         if (
-            (!data.articles || data.articles.length === 0) &&
-            (
-                (lang === "pa" && ["technology", "health"].includes(category)) ||
-                (lang === "gu" && category === "technology")
-            )
+            needsFallback &&
+            (!result.ok || !result.data.articles?.length)
         ) {
-            data = await fetchNews("general");
+            const generalResult = await fetchNews("general");
+
+            if (generalResult.ok && generalResult.data.articles?.length) {
+                result = generalResult;
+            }
         }
 
-        return res.status(200).json(data);
+        // 4. Return final result
+        if (!result.ok) {
+            return res.status(200).json({
+                articles: [],
+                totalArticles: 0
+            });
+        }
+
+        return res.status(200).json(result.data);
 
     } catch (error) {
-        return res.status(error.status || 500).json(
-            error.data || {
-                error: "Unable to fetch news",
-                details: error.message
-            }
-        );
+        return res.status(200).json({
+            articles: [],
+            totalArticles: 0
+        });
     }
 };
