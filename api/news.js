@@ -84,10 +84,13 @@ module.exports = async (req, res) => {
             sourceCategory: category
         });
 
-    } catch (error) {
-        return res.status(200).json({
-            articles: [],
-            apiUnavailable: true
-        });
+    }catch (error) {
+    console.error("GNEWS ERROR:", error);
+
+    return res.status(500).json({
+        articles: [],
+        error: error.message
+    });
+
     }
 };
