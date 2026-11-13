@@ -16,7 +16,7 @@ function changeLanguage() {
 function selectCategory(event, category) {
     currentCategory = category;
 
-    cards.forEach(c => c.classList.remove("active"));
+    cards.forEach(card => card.classList.remove("active"));
     event.currentTarget.classList.add("active");
 
     event.currentTarget.scrollIntoView({
@@ -27,104 +27,88 @@ function selectCategory(event, category) {
     getNews(category);
 }
 
-// Fetch news from API
-async function fetchNews(category) {
-    try {
-        const response = await fetch(
-            `/api/news?category=${category}&lang=${currentLang}`
-        );
-
-        const data = await response.json();
-
-        if (!response.ok) return [];
-
-        return data.articles || [];
-    } catch (error) {
-        console.log("News API unavailable:", error);
-        return [];
-    }
-}
-
-// Demo cards only when API quota is exhausted
-function showDemoNews(container) {
-    const demoArticles = [
-        {
-            title: "Technology is transforming the way people live and work",
-            description: "Explore the latest developments in technology and innovation."
-        },
-        {
-            title: "Global developments and important events around the world",
-            description: "Stay informed with this sample news preview."
-        },
-        {
-            title: "Business and innovation continue to shape the future",
-            description: "Discover important topics in business and the economy."
-        }
-    ];
-
+// Display news using existing CSS classes
+function displayNews(articles) {
+    const container = document.getElementById("news-container");
     container.innerHTML = "";
 
-    demoArticles.forEach(article => {
+    articles.forEach(article => {
         const card = document.createElement("div");
         card.className = "news-card";
 
-        card.innerHTML = `
-            <div style="padding:15px">
-                <small>DEMO NEWS PREVIEW</small>
-                <h4>${article.title}</h4>
-                <p>${article.description}</p>
-            </div>
-        `;
+        const img = document.createElement("img");
+        img.src = article.image || "https://via.placeholder.com/300";
+        img.alt = "News image";
+
+        const heading = document.createElement("h4");
+        heading.textContent = article.title || "News";
+
+        const link = document.createElement("a");
+        link.href = article.url || "#";
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+        link.textContent = "Read More";
+
+        card.appendChild(img);
+        card.appendChild(heading);
+        card.appendChild(link);
 
         container.appendChild(card);
     });
 }
 
-// Display news
 async function getNews(category) {
     const container = document.getElementById("news-container");
 
+    try {
+        const response = await fetch(
+            `/api/news?category=${encodeURIComponent(category)}&lang=${encodeURIComponent(currentLang)}`
+        );
+
+        const data = await response.json();
+        let articles = data.articles || [];
+
+        // Save actual General news for offline backup
+        if (
+            articles.length > 0 &&
+            data.sourceCategory === "general"
+        ) {
+            localStorage.setItem(
+                `generalNews_${currentLang}`,
+                JSON.stringify(articles)
+            );
+        }
+
+        // Display actual API news
+        if (articles.length > 0) {
+            displayNews(articles);
+            return;
+        }
+
+    } catch (error) {
+        console.log("News API unavailable:", error);
+    }
+
+    // Use previously saved REAL General news if available
+    const savedNews = localStorage.getItem(
+        `generalNews_${currentLang}`
+    );
+
+    if (savedNews) {
+        try {
+            const savedArticles = JSON.parse(savedNews);
+
+            if (savedArticles.length > 0) {
+                displayNews(savedArticles);
+                return;
+            }
+        } catch (error) {
+            console.log("Saved news unavailable");
+        }
+    }
+
+    // No fake cards and no error message
     container.innerHTML = "";
-
-    // First try selected category
-    let articles = await fetchNews(category);
-
-    // If category news is unavailable, try General News
-    if (articles.length === 0 && category !== "general") {
-        articles = await fetchNews("general");
-    }
-
-    // Show real news if available
-    if (articles.length > 0) {
-        articles.forEach(article => {
-            const card = document.createElement("div");
-            card.className = "news-card";
-
-            const img = document.createElement("img");
-            img.src = article.image || "https://via.placeholder.com/300";
-            img.alt = "News image";
-
-            const heading = document.createElement("h4");
-            heading.textContent = article.title || "News";
-
-            const link = document.createElement("a");
-            link.href = article.url || "#";
-            link.target = "_blank";
-            link.rel = "noopener noreferrer";
-            link.textContent = "Read More";
-
-            card.appendChild(img);
-            card.appendChild(heading);
-            card.appendChild(link);
-
-            container.appendChild(card);
-        });
-
-        return;
-    }
-
-    // If API is unavailable, show demo cards instead of errors
-    showDemoNews(container);
 }
 
 getNews("general");
