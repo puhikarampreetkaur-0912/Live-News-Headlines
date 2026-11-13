@@ -5,38 +5,34 @@ module.exports = async (req, res) => {
 
         if (!apiKey) {
             return res.status(500).json({
-                error: "GNews API key is missing"
+                articles: [],
+                error: "API key missing"
             });
         }
 
         const category = req.query.category || "general";
         const lang = req.query.lang || "en";
 
+        // Fallback is needed only for these combinations
         const needsFallback =
-            (lang === "pa" && ["technology", "health"].includes(category)) ||
+            (lang === "pa" &&
+                ["technology", "health"].includes(category)) ||
             (lang === "gu" && category === "technology");
 
-        const fetchNews = async (selectedCategory, query = null) => {
+        const fetchNews = async (selectedCategory) => {
             const params = new URLSearchParams({
+                category: selectedCategory,
                 lang: lang,
                 max: "10",
                 apikey: apiKey
             });
 
-            if (query) {
-                params.set("q", query);
-            } else {
-                params.set("category", selectedCategory);
-            }
-
             if (lang !== "pa" && lang !== "es") {
                 params.set("country", "in");
             }
 
-            const endpoint = query ? "search" : "top-headlines";
-
             const response = await fetch(
-                `https://gnews.io/api/v4/${endpoint}?${params}`
+                `https://gnews.io/api/v4/top-headlines?${params}`
             );
 
             const data = await response.json();
@@ -47,52 +43,51 @@ module.exports = async (req, res) => {
             };
         };
 
-        // 1. Selected category news
-        let result = await fetchNews(category);
+        // First request: selected category
+        const result = await fetchNews(category);
 
-        // 2. Punjabi search fallback
-        if (
-            lang === "pa" &&
-            ["technology", "health"].includes(category) &&
-            (!result.ok || !result.data.articles?.length)
-        ) {
-            const query = category === "technology"
-                ? "ਤਕਨਾਲੋਜੀ OR ਤਕਨੀਕ OR ਕੰਪਿਊਟਰ OR ਮੋਬਾਈਲ"
-                : "ਸਿਹਤ OR ਬਿਮਾਰੀ OR ਹਸਪਤਾਲ OR ਦਵਾਈ";
-
-            const searchResult = await fetchNews(category, query);
-
-            if (searchResult.ok && searchResult.data.articles?.length) {
-                result = searchResult;
-            }
-        }
-
-        // 3. General news fallback
-        if (
-            needsFallback &&
-            (!result.ok || !result.data.articles?.length)
-        ) {
-            const generalResult = await fetchNews("general");
-
-            if (generalResult.ok && generalResult.data.articles?.length) {
-                result = generalResult;
-            }
-        }
-
-        // 4. Return final result
+        // If API itself fails, don't waste another request
         if (!result.ok) {
             return res.status(200).json({
                 articles: [],
-                totalArticles: 0
+                sourceCategory: category,
+                apiUnavailable: true
             });
         }
 
-        return res.status(200).json(result.data);
+        // If category news exists, return it
+        if (result.data.articles?.length > 0) {
+            return res.status(200).json({
+                ...result.data,
+                sourceCategory: category
+            });
+        }
+
+        // Only affected language/category combinations use General fallback
+        if (needsFallback) {
+            const generalResult = await fetchNews("general");
+
+            if (
+                generalResult.ok &&
+                generalResult.data.articles?.length > 0
+            ) {
+                return res.status(200).json({
+                    ...generalResult.data,
+                    sourceCategory: "general",
+                    fallback: true
+                });
+            }
+        }
+
+        return res.status(200).json({
+            articles: [],
+            sourceCategory: category
+        });
 
     } catch (error) {
         return res.status(200).json({
             articles: [],
-            totalArticles: 0
+            apiUnavailable: true
         });
     }
 };
